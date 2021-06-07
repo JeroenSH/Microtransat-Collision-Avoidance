@@ -1,12 +1,7 @@
 # TODO
-# angle with speed and richting checken
-
-#voor rechte lijnen oplossing verzinnen
-#kijken of schip stil ligt
-# in lezen van bestand
-# met echte waardes doen
 # koers bepalen
 # meerdere schepen tegelijk
+# direct uitlezen uit ais ?
 
 import numpy as np
 from fractions import Fraction
@@ -44,7 +39,14 @@ class formula:
         #     self.speed = self.speed *-1
         #     self.angle = 270 - self.angle
 
-    def headingToCoefficient(self):     
+    def headingToCoefficient(self):
+        if(self.angle == 90 or self.angle ==270):
+            self.a = 0
+            return
+        if(self.angle == 0 or self.angle == 180):
+            self.angle = self.angle + 0.0001
+            
+            
         angleB1 = 180 -90 - self.angle
         sideAC = np.sin(np.radians(angleB1)/np.sin(np.radians(90)))
         angleB2 = 90 - angleB1
@@ -55,10 +57,8 @@ class formula:
         self.a = float(self.a)
         if(self.negA):
             self.a = self.a *-1
-        print(self.a)
 
     def calculateNewCoords(self,time):
-        print(self.angle)    
         # calculate the new coords
         # cos = overstaand /schuine
         # schuine zijde is: s = v*t  
@@ -67,9 +67,9 @@ class formula:
         # + oude coordinaat maakt niewe coordinaat
         self.y = self.y + (self.speed*time)*np.cos(90-self.angle)         
         self.x = self.x + (self.speed*time)*np.sin(90-self.angle)
-        print("x y")
-        print(self.x)
-        print(self.y)
+        # print("x y")
+        # print(self.x)
+        # print(self.y)
 
     def CalculateB(self):
         self.b = self.y -(self.a*self.x)
@@ -99,36 +99,59 @@ class formula:
 def DistanceBetweenPoints(x1,y1,x2,y2):
     return np.sqrt(((x2-x1)**2)+((y2-y1)**2) )
 
-def coordsToMeters(long,lat):
-    print(long)
-    print(int(long))
-    x = 1852 * (60 * (long - int(long)))
+def coordsToMeters(lon,lat):
+    lon = lon.replace(' ','') 
+    lat = lat.replace(' ','') 
+    lon = float(lon)
+    lat = float(lat)
+    x = 1852 * (60 * (lon - int(lon)))
     y = 1852 * (60 * (lat - int(lat)))
     return x,y
 
 def knotsToMPS(speed):
+    speed = speed.replace(' ','')
+    speed = float(speed)
     return (speed *1.852)/3.6
 
-# x,y = coordsToMeters(4.9, 2.32)
-# print(x,y)
+# openen en lezen van bestand verander later naar direct uitlezen uit ais
+f = open("data.txt", "r")
+file = f.read()
+file_splitLine = file.splitlines()
+f.close()
+file_split = list(set(file_splitLine))
+ships = []
+for i in range(len(file_split)):
+    file_split[i] = file_split[i].replace('[','')
+    file_split[i] = file_split[i].replace(']','')
 
-# speed = knotsToMPS(5)
-# print(speed)
+for i in range(len(file_split)):
+    line_split = file_split[i].split(',')
+    if not line_split[5] == " null":
+        if((int(line_split[5])) == 511):
+            #print("geen heading")
+            pass
+        else: 
+            ships.append(line_split)      
+            #print(line_split[0])
+# for i in range(len(ships)):
+i = 2
+x,y = coordsToMeters(ships[i][2], ships[i][1])
+speed = knotsToMPS(ships[i][3])
+angle = ships[i][5]
+angle = angle.replace(' ','')
+angle = int(angle)
 
+Formula1 = formula(4.453,52,5,180)         #onze boot
+Formula2 = formula(x,y,speed,angle)        #ander schip
+# print(Formula1.a)
+# print(Formula2.a)
 
-Formula1 = formula(0,2,1,300)         #onze boot
-Formula2 = formula(0,5,1,170)        #ander schip
-print(Formula1.a)
-print(Formula2.a)
+smallestDistance = 1000000000000
 
-smallestDistance = 10000
-
-for timeInterval in range(0,20,1):
+for timeInterval in range(0,1000,1):
     Formula1.calculateNewCoords(timeInterval)
     Formula2.calculateNewCoords(timeInterval)
     distance = DistanceBetweenPoints(Formula1.x , Formula1.y, Formula2.x , Formula2.y)
-    print("distance")
-    print(distance)
     if(distance < smallestDistance):
         smallestDistance = distance
 
