@@ -1,6 +1,7 @@
 import numpy as np
 from tkinter import *
 import matplotlib.pyplot as plt
+import keyboard
 class formula:
     def __init__(self, x, y ,speed,angle):
         self.angle = angle
@@ -160,7 +161,7 @@ root.geometry("400x200")
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
-def graph(x1, x2, y1, y2, i):
+def graph(x1, x2, y1, y2, i,blockBool):
     # Move left y-axis and bottim x-axis to centre, passing through (0,0)
     ax.spines['left'].set_position('center')
     ax.spines['bottom'].set_position('center')
@@ -186,15 +187,25 @@ def graph(x1, x2, y1, y2, i):
     plt.plot(own_x, own_y, color = "green", Label = "Koers eigen boot", linestyle = '--')
     plt.plot(xoud,youd,color="blue", Label= "Oude koers eigen boot", linestyle='--')
     plt.legend()
-    plt.show(block=False)
-    plt.pause(1)
+    plt.show(block=blockBool)
+    plt.pause(0.001)
     plt.close()
     
 def update():
-    for i in range(amountOfCoords):
-        graph(own_x[i], listThey_x, own_y[i], listThey_y, i) 
+    i = 0
+    update = False
+    while i < amountOfCoords:
+        if keyboard.is_pressed('left arrow'):
+            if i == 0:                                      # prevent list index out of range
+                i = 0
+            else:
+                i -= 1
+            graph(own_x[i], listThey_x, own_y[i], listThey_y, i, update) 
+        elif keyboard.is_pressed('right arrow'):
+            i += 1
+            graph(own_x[i], listThey_x, own_y[i], listThey_y, i, update) 
+
 
 my_button = Button(root, text="graph", command=update)
 my_button.pack()
-
 root.mainloop() 
