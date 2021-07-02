@@ -9,8 +9,10 @@ class formula:
         self.speed = speed
         self.x = x
         self.y = y
+
     def updateAngle(self, angle):           #update the angle of the boat
         self.angle = angle
+
     def update(self, x, y ,speed):          #update all the values of the boat
         self.speed = speed
         self.x = x
@@ -18,11 +20,11 @@ class formula:
         
     def calculateNewCoords(self,time):
         # calculate the new coords
-        # cos = overstaand /schuine
+        # cos = overstaande-zijde /schuine-zijde
         # schuine zijde is: s = v*t  
-        # cos(90 -angle)
-        # dus overstaand is formule
-        # + oude coordinaat maakt niewe coordinaat
+        # cos(180 -angle)    dit doen we om er voor te zorgen dat er altijd een driehoek is waar het mogelijk is om de berekening op uit te voeren.
+        # dus overstaand is schuine-zijde * cos
+        # + oude coordinaten maakt niewe coordinaten
         dY = 0
         dX = 0 
         if(self.angle <= 90):
@@ -44,18 +46,18 @@ class formula:
         self.y = self.y +dY
         self.x = self.x + dX
 
-def DistanceBetweenPoints(x1,y1,x2,y2):                 #pythagoras 
+def DistanceBetweenPoints(x1,y1,x2,y2):                 # pythagoras om afstand tussen 2 punten te berekenen
     return np.sqrt(((x2-x1)**2)+((y2-y1)**2) )
 
-def coordsToMeters(lon,lat):                    #change the values from longitude/ latitude to meters
+def coordsToMeters(lon,lat):                    # change the values from longitude/ latitude to meters
     try:
-        lon = lon.replace(' ','')               #try to remove empty spaces from string
+        lon = lon.replace(' ','')               # try to remove empty spaces from string
         lat = lat.replace(' ','') 
     except:
         pass
     lon = float(lon)
     lat = float(lat)
-    x = 1852 * (60 * (lon - int(lon)))         #calculate the x and y in meters
+    x = 1852 * (60 * (lon - int(lon)))         # calculate the x and y in meters from longitude latitude
     y = 1852 * (60 * (lat - int(lat)))
     return x,y
 
@@ -91,9 +93,7 @@ def calculateNewHeading():                  # update the heading
     # then substract 10 from the new heading
     # then add 15 from the new heading
     # then substract 20 from the new heading
-    # this will continue untill a heading has been found
-    # list of heading is (with start heading 0):
-    #print("new heading")
+    # this will continue untill a heading has been found, where there will be no collision
     global Formula1
     heading = Formula1.angle
     global h
@@ -180,7 +180,7 @@ amountOfCoords = 100
 
 #open the file with the ais data in it. 
 #this can be changed later to directly reading from the ais module.
-f = open("data2.txt", "r")
+f = open("data2.txt", "r")                      #this is the file written to by the other python script receiving the data
 file = f.read()
 file_splitLine = file.splitlines()
 f.close()
