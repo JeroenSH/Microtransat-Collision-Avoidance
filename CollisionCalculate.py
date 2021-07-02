@@ -2,6 +2,7 @@ import numpy as np
 from tkinter import *
 import matplotlib.pyplot as plt
 import keyboard
+
 class formula:
     def __init__(self, x, y ,speed,angle):
         self.angle = angle
@@ -14,6 +15,7 @@ class formula:
         self.speed = speed
         self.x = x
         self.y = y
+        
     def calculateNewCoords(self,time):
         # calculate the new coords
         # cos = overstaand /schuine
@@ -62,64 +64,6 @@ def knotsToMPS(speed):                          #change the speed to meters per 
     speed = float(speed)
     return (speed *1.852)/3.6
 
-#open the file with the ais data in it. 
-#this can be changed later to directly reading from the ais module.
-f = open("data2.txt", "r")
-file = f.read()
-file_splitLine = file.splitlines()
-f.close()
-file_split = list(set(file_splitLine))
-ships = []
-
-for i in range(len(file_split)):                                                    #remove the brackets for all entries
-    file_split[i] = file_split[i].replace('[','')
-    file_split[i] = file_split[i].replace(']','')
-
-for i in range(len(file_split)):                            #split the line on every ',' and put it in a list
-    line_split = file_split[i].split(',')
-    if not line_split[5] == " null":
-        if((int(line_split[5])) == 511):                    # if the heading is 511 do not append to the list. (ship is stationary)
-            pass
-        else: 
-            ships.append(line_split)      
-
-dangerDistance = 10000
-own_x = []
-own_y = []
-they_x = []
-they_y = []
-listThey_x = []
-listThey_y = []
-xoud = []
-youd = []
-h = 0
-ownx,owny = coordsToMeters(4.5,50)
-ownSpeed = 2
-Formula1 = formula(ownx, owny,ownSpeed,1)         #onze boot
-timeInterval = 350
-amountOfCoords = 100
-
-for i in range(len(ships)):                             # go through list of all ships from ais data
-    x,y = coordsToMeters(ships[i][1], ships[i][2])      #change to meters
-    speed = knotsToMPS(ships[i][3])                     # change to meters per second
-    angle = ships[i][5]
-    angle = angle.replace(' ','')                       
-    angle = int(angle)
-    Formula2 = formula(x,y,speed,angle)                 #set all the data in the formula
-    for j in range(0,amountOfCoords,1):                 #calculate the new coordinates and put it in a list.
-        Formula2.calculateNewCoords(timeInterval)
-        they_x.append(Formula2.x)
-        they_y.append(Formula2.y)
-    listThey_x.append(they_x)                           #list of coordinates list per ship     
-    listThey_y.append(they_y)
-    they_x = []
-    they_y = []
-
-for i in range(0,amountOfCoords,1):                     #calculate the original coordinates of our own ship to display it later       
-        Formula1.calculateNewCoords(timeInterval)
-        xoud.append(Formula1.x)
-        youd.append(Formula1.y)
-
 def calculatedistances():
     global Formula1
     global own_x
@@ -166,14 +110,6 @@ def calculateNewHeading():                  # update the heading
         heading = heading - 360
     Formula1.updateAngle(heading)
     calculatedistances()
-    
-calculatedistances()
-
-root = Tk()
-root.title('test')
-root.geometry("400x200")
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
 
 def graph(x1, x2, y1, y2, i,blockBool):
     # Move left y-axis and bottim x-axis to centre, passing through (0,0)
@@ -191,7 +127,7 @@ def graph(x1, x2, y1, y2, i,blockBool):
     plt.ylim(y1-150000, y1+150000)
     plt.gca().set_aspect('equal', adjustable='box') 
     plt.text(1, 1, 'frame ' + str(i), horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
-    plt.scatter(x1,y1,c="red",s=2000)                               # circle of minimum distance from the ship
+    plt.scatter(x1,y1,c="red",s=700)                               # circle of minimum distance from the ship
     plt.scatter(x1, y1, c="green", Label = "Eigen boot")            # display our own ship 
 
     plt.plot(own_x, own_y, color = "green", Label = "Koers eigen boot", linestyle = '--')       #display our heading
@@ -225,6 +161,81 @@ def update():
             else:
                 i += 1
             graph(own_x[i], listThey_x, own_y[i], listThey_y, i, update) 
+
+dangerDistance = 10000
+own_x = []
+own_y = []
+they_x = []
+they_y = []
+listThey_x = []
+listThey_y = []
+xoud = []
+youd = []
+h = 0
+ownx,owny = coordsToMeters(4.5,50)
+ownSpeed = 2
+Formula1 = formula(ownx, owny,ownSpeed,1)         #onze boot
+timeInterval = 350
+amountOfCoords = 100
+
+#open the file with the ais data in it. 
+#this can be changed later to directly reading from the ais module.
+f = open("data2.txt", "r")
+file = f.read()
+file_splitLine = file.splitlines()
+f.close()
+file_split = list(set(file_splitLine))
+ships = []
+
+for i in range(len(file_split)):                                                    #remove the brackets for all entries
+    file_split[i] = file_split[i].replace('[','')
+    file_split[i] = file_split[i].replace(']','')
+
+for i in range(len(file_split)):                            #split the line on every ',' and put it in a list
+    line_split = file_split[i].split(',')
+    if not line_split[5] == " null":
+        if((int(line_split[5])) == 511):                    # if the heading is 511 do not append to the list. (ship is stationary)
+            pass
+        else: 
+            ships.append(line_split)      
+
+
+def calculateOtherCoords():
+    global listThey_x
+    global listThey_y
+    global they_x
+    global they_y
+    for i in range(len(ships)):                             # go through list of all ships from ais data
+        x,y = coordsToMeters(ships[i][1], ships[i][2])      #change to meters
+        speed = knotsToMPS(ships[i][3])                     # change to meters per second
+        angle = ships[i][5]
+        angle = angle.replace(' ','')                       
+        angle = int(angle)
+        Formula2 = formula(x,y,speed,angle)                 #set all the data in the formula
+        for j in range(0,amountOfCoords,1):                 #calculate the new coordinates and put it in a list.
+            Formula2.calculateNewCoords(timeInterval)
+            they_x.append(Formula2.x)
+            they_y.append(Formula2.y)
+        listThey_x.append(they_x)                           #list of coordinates list per ship     
+        listThey_y.append(they_y)
+        they_x = []
+        they_y = []
+
+def originalListOfCoords():
+    for i in range(0,amountOfCoords,1):                     #calculate the original coordinates of our own ship to display it later       
+        Formula1.calculateNewCoords(timeInterval)
+        xoud.append(Formula1.x)
+        youd.append(Formula1.y)
+
+calculateOtherCoords()
+originalListOfCoords()
+calculatedistances()
+
+root = Tk()
+root.title('test')
+root.geometry("400x200")
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
 
 
 my_button = Button(root, text="graph", command=update)
